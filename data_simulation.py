@@ -255,7 +255,7 @@ def _generate_mediation_variables(cities, year, policy_active):
         coupling_coord[policy_active == 1] += np.random.uniform(0.02, 0.06, n).clip(0)[policy_active == 1]
 
     return pd.DataFrame({
-        "green_rate_m": green_rate,
+        "green_rate": green_rate,
         "sponge_inv": sponge_inv,
         "blue_green_ratio": blue_green_ratio,
         "coupling_coord": coupling_coord,
