@@ -28,6 +28,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import START_YEAR, END_YEAR, POLICY_YEAR, CONTROL_VARS, NDVI_PERIODS_PER_YEAR as N_PERIODS
 
 from real_data.city_info import load_city_info
+from real_data.city_list_280 import load as load_full_city_list
 from real_data.policy_pilots import get_pilot_year, get_treated_cities
 from real_data.gee_ndvi import load_ndvi_panel, EE_AVAILABLE
 from real_data.era5_weather import load_weather_panel, CDS_AVAILABLE
@@ -42,6 +43,7 @@ def load_real_panel(
     policy="climate_adaptive",
     start_year=START_YEAR,
     end_year=END_YEAR,
+    use_full_city_list=True,
 ):
     """Load real data from all sources and assemble the panel.
 
@@ -52,6 +54,7 @@ def load_real_panel(
         yearbook_dir: directory with yearbook Excel/CSV files
         policy: "climate_adaptive" or "sponge" or "both"
         start_year, end_year: panel period
+        use_full_city_list: if True, use 338-city list; else use CSV/hardcoded
 
     Returns:
         (panel, ndvi_ts, events) — same format as generate_panel_data()
@@ -64,7 +67,15 @@ def load_real_panel(
 
     # 1. City info
     print("\n[1] Loading city information...")
-    city_info = load_city_info(city_csv)
+    if use_full_city_list:
+        from real_data.city_info import _classify_region, _classify_ns, _classify_coastal
+        city_info = load_full_city_list()
+        city_info["region"] = city_info["province"].apply(_classify_region)
+        city_info["ns"] = city_info["lat"].apply(_classify_ns)
+        city_info["coastal"] = city_info["province"].apply(_classify_coastal)
+        print(f"  Using full city list: {len(city_info)} cities")
+    else:
+        city_info = load_city_info(city_csv)
     n_cities = len(city_info)
     print(f"  Cities loaded: {n_cities}")
 

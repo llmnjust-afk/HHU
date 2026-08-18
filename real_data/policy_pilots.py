@@ -134,17 +134,32 @@ def get_pilot_dataframe(policy="climate_adaptive"):
     return pd.DataFrame(rows)
 
 
+PILOT_TO_CITY_MAP = {
+    "璧山区": "重庆市",
+    "潼南区": "重庆市",
+    "西咸新区": "西安市",
+    "贵安新区": "贵阳市",
+    "库尔勒市": "巴音郭楞蒙古自治州(库尔勒市)",
+    "阿克苏市": "阿克苏地区(阿克苏市)",
+    "石河子市": "石河子市(新疆生产建设兵团)",
+    "迁安市": "唐山市",
+}
+
+
 def get_treated_cities(policy="climate_adaptive"):
-    """Return set of treated city names.
+    """Return set of treated city names (mapped to city_list_280 names).
 
     Args:
         policy: "climate_adaptive", "sponge", or "both"
 
     Returns:
-        set of city names (Chinese)
+        set of city names (Chinese, matching city_list_280.py)
     """
     df = get_pilot_dataframe(policy=policy)
-    return set(df["city_name"].tolist())
+    names = set()
+    for name in df["city_name"].tolist():
+        names.add(PILOT_TO_CITY_MAP.get(name, name))
+    return names
 
 
 def get_pilot_year(city_name, policy="climate_adaptive"):
@@ -154,9 +169,11 @@ def get_pilot_year(city_name, policy="climate_adaptive"):
         int pilot year, or None if city is not a pilot
     """
     df = get_pilot_dataframe(policy=policy)
-    match = df[df["city_name"] == city_name]
-    if len(match) > 0:
-        return int(match.iloc[0]["pilot_year"])
+    for _, row in df.iterrows():
+        pilot_name = row["city_name"]
+        mapped = PILOT_TO_CITY_MAP.get(pilot_name, pilot_name)
+        if mapped == city_name or pilot_name == city_name:
+            return int(row["pilot_year"])
     return None
 
 
