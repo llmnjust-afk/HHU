@@ -127,11 +127,11 @@ def heterogeneity_summary_table(all_results):
             rows.append({
                 "dimension": dim,
                 "subgroup": group,
-                "theta": res["theta"],
-                "se": res["se"],
-                "ci_lower": res["ci_lower"],
-                "ci_upper": res["ci_upper"],
-                "n": res["n"],
+                "theta": res.get("theta", np.nan),
+                "se": res.get("se", np.nan),
+                "ci_lower": res.get("ci_lower", np.nan),
+                "ci_upper": res.get("ci_upper", np.nan),
+                "n": res.get("n", np.nan),
                 "p_value": res.get("p_value", np.nan),
             })
 

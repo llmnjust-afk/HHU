@@ -83,11 +83,13 @@ def compute_spatial_lag(panel, var_name, W, city_ids):
 
     # Spatial lag: W × X
     spatial_lag = pd.DataFrame(W @ pivot.values, index=city_ids, columns=pivot.columns)
+    spatial_lag.index.name = "city_id"
 
     # Convert back to long format
     spatial_lag_long = spatial_lag.reset_index().melt(
         id_vars="city_id", var_name="year", value_name=f"spatial_{var_name}"
     )
+    spatial_lag_long["year"] = spatial_lag_long["year"].astype(int)
 
     return spatial_lag_long
 
