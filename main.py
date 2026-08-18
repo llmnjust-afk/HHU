@@ -14,7 +14,8 @@ Runs the complete analysis:
   Phase 10: Visualization (all figures and tables)
 
 Usage:
-    python main.py                    # Run full pipeline
+    python main.py                    # Run full pipeline (synthetic data)
+    python main.py --real-data        # Use real data (GEE NDVI, ERA5, yearbook)
     python main.py --quick            # Quick run (reduced iterations)
     python main.py --no-spatial       # Skip spatial analysis
     python main.py --no-dose           # Skip dose-response
@@ -33,6 +34,8 @@ np.random.seed(RANDOM_SEED)
 
 def main():
     parser = argparse.ArgumentParser(description="CSEE-DML Research Pipeline")
+    parser.add_argument("--real-data", action="store_true",
+                        help="Use real data instead of synthetic simulation")
     parser.add_argument("--quick", action="store_true",
                         help="Quick run with reduced iterations")
     parser.add_argument("--no-spatial", action="store_true",
@@ -49,17 +52,22 @@ def main():
     print("#" * 70)
     print(f"#  Random seed: {RANDOM_SEED}")
     print(f"#  Quick mode: {args.quick}")
+    print(f"#  Data source: {'REAL' if args.real_data else 'SYNTHETIC'}")
     print("#" * 70)
 
     all_results = {}
 
-    # ── Phase 1: Data Generation ──────────────────────────────────────────
+    # ── Phase 1: Data Generation / Loading ────────────────────────────────
     print("\n\n" + "=" * 70)
-    print("PHASE 1: Data Generation")
+    print("PHASE 1: Data Generation" + (" (REAL DATA)" if args.real_data else ""))
     print("=" * 70)
 
-    from data_simulation import generate_panel_data
-    panel, ndvi_ts, weather_events = generate_panel_data()
+    if args.real_data:
+        from real_data.data_loader import load_real_panel
+        panel, ndvi_ts, weather_events = load_real_panel()
+    else:
+        from data_simulation import generate_panel_data
+        panel, ndvi_ts, weather_events = generate_panel_data()
     all_results["panel"] = panel
 
     # ── Phase 2: CSEE Computation ─────────────────────────────────────────

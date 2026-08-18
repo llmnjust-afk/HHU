@@ -5,5 +5,8 @@ __pycache__/
 results/figures/*.png
 results/tables/*.csv
 *.log
+*.pkl
 .env
 PAT
+data/
+
