@@ -33,6 +33,7 @@ from real_data.policy_pilots import get_pilot_year, get_treated_cities
 from real_data.gee_ndvi import load_ndvi_panel, EE_AVAILABLE
 from real_data.era5_weather import load_weather_panel, CDS_AVAILABLE
 from real_data.city_stats import load_yearbook_data, merge_with_city_info, CONTROL_COLS
+from real_data.real_controls import build_real_controls
 
 
 def load_real_panel(
@@ -40,7 +41,7 @@ def load_real_panel(
     ndvi_path="data/ndvi_panel.pkl",
     weather_path="data/weather_events.pkl",
     yearbook_dir="data/yearbook",
-    policy="climate_adaptive",
+    policy="both",
     start_year=START_YEAR,
     end_year=END_YEAR,
     use_full_city_list=True,
@@ -144,6 +145,12 @@ def load_real_panel(
 
 def _assemble_panel(city_info, ndvi_ts, events, yearbook, start_year, end_year):
     """Assemble the panel DataFrame from all data sources."""
+    print("\n  [Panel] Building real control variables...")
+    real_controls = build_real_controls(
+        city_info, ndvi_ts, events, start_year, end_year
+    )
+    real_controls_dict = real_controls.set_index(["city_id", "year"])
+
     rows = []
 
     years = range(start_year, end_year + 1)
@@ -202,7 +209,15 @@ def _assemble_panel(city_info, ndvi_ts, events, yearbook, start_year, end_year):
                 "city_size": city_row["city_size"],
             }
 
-            # Control variables from yearbook or fallback
+            # Control variables from real data sources (census, CN_Public, ERA5, NDVI)
+            rc_key = (city_id, year)
+            if rc_key in real_controls_dict.index:
+                rc_row = real_controls_dict.loc[rc_key]
+                for col in CONTROL_VARS:
+                    if col in rc_row.index and pd.notna(rc_row[col]):
+                        row[col] = float(rc_row[col])
+
+            # Also check yearbook for any additional columns
             if not yearbook.empty:
                 yb_match = yearbook[
                     (yearbook["city_id"] == city_id) &
@@ -256,13 +271,14 @@ def _assemble_panel(city_info, ndvi_ts, events, yearbook, start_year, end_year):
     panel["policy_intensity"] = np.log(panel["sponge_intensity"].clip(lower=1))
     panel.loc[panel["sponge_intensity"] == 0, "policy_intensity"] = 0
 
-    # Fill missing control variables with column medians
+    # Fill missing control variables with column medians (real data, not random)
     for col in CONTROL_VARS:
         if col in panel.columns:
+            panel[col] = pd.to_numeric(panel[col], errors="coerce")
             panel[col] = panel[col].fillna(panel[col].median())
         else:
-            panel[col] = np.random.normal(0, 1, len(panel))
-            print(f"  WARNING: control variable '{col}' not found, using random placeholder")
+            panel[col] = 0.0
+            print(f"  WARNING: control variable '{col}' not found in real data")
 
     # Eco baseline fallback
     if "eco_baseline" not in panel.columns:
