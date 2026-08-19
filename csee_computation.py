@@ -122,8 +122,23 @@ def compute_city_year_csee(ndvi_series, events, year, ndvi_history, n_periods=ND
                 ndvi_post = float(np.mean(ndvi_series[rec_start_idx:rec_end_idx]))
             else:
                 ndvi_post = ndvi_event  # can't measure recovery
+        elif year + 1 in ndvi_history:
+            # Event late in year: use next year's early NDVI for recovery
+            next_ndvi = ndvi_history[year + 1]
+            spill_start_day = recovery_start_day - 365
+            spill_end_day = recovery_end_day - 365
+            if 0 <= spill_start_day and spill_end_day <= 365:
+                rec_start_idx = _get_period_index_for_day(max(spill_start_day, 1), n_periods)
+                rec_end_idx = _get_period_index_for_day(spill_end_day, n_periods)
+                rec_end_idx = min(rec_end_idx + 1, n_periods)
+                if rec_start_idx < rec_end_idx:
+                    ndvi_post = float(np.mean(next_ndvi[rec_start_idx:rec_end_idx]))
+                else:
+                    ndvi_post = ndvi_event
+            else:
+                ndvi_post = ndvi_event
         else:
-            ndvi_post = ndvi_event  # event too late in year
+            ndvi_post = ndvi_event  # no next year data available
 
         cr, rc = compute_cr_rc(ndvi_event, ndvi_normal_period, ndvi_post)
         crs.append(cr)
@@ -231,14 +246,19 @@ def compute_csee_panel(panel, ndvi_ts, weather_events):
     panel["rc"] = rc_list
     panel["csee_raw"] = csee_list  # equal-weight version
 
-    # Recompute CSEE using entropy weight method (batch)
-    print("  Computing entropy weights for CSEE aggregation...")
+    # CSEE: use equal-weight composite as primary (more balanced than entropy)
+    # Entropy weights are heavily skewed when CR has low variance (common with real data)
+    panel["csee"] = panel["csee_raw"]
+
+    # Also compute entropy-weighted version for robustness
+    print("  Computing entropy weights for CSEE aggregation (robustness)...")
     weights, csee_entropy = entropy_weight_method(
         panel[["cr", "rc"]].dropna(),
         positive_cols=["cr", "rc"]
     )
-    panel["csee"] = csee_entropy.reindex(panel.index)
+    panel["csee_entropy"] = csee_entropy.reindex(panel.index)
     print(f"  Entropy weights: CR={weights.get('cr', 0.5):.4f}, RC={weights.get('rc', 0.5):.4f}")
+    print(f"  Using equal-weight CSEE as primary (0.5*CR + 0.5*RC)")
 
     # Also compute an RSEI-like proxy for robustness
     # RSEI integrates greenness (NDVI), wetness, heat, dryness

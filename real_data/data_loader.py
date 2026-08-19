@@ -238,12 +238,31 @@ def _assemble_panel(city_info, ndvi_ts, events, yearbook, start_year, end_year):
                     ])
                     row["eco_baseline"] = "fragile" if early_ndvi < 0.4 else "good"
 
-            # Mediation variables (with _m suffix)
+            # Mediation variables — derived from real data
             if "green_rate" in row:
                 row["green_rate_m"] = row["green_rate"]
-            row.setdefault("sponge_inv_m", 0.0 if treat == 0 else np.random.lognormal(9, 0.5))
-            row.setdefault("blue_green_ratio_m", np.random.uniform(0.1, 0.6))
-            row.setdefault("coupling_coord_m", np.random.uniform(0.2, 0.9))
+
+            # Sponge investment: GDP-based proxy for treated cities post-policy
+            gdp_val = row.get("ln_gdppc", 10.0)
+            if treat == 1 and year >= policy_year:
+                size_mult = 1.5 if city_row.get("city_size") == "large" else 1.0
+                row["sponge_inv_m"] = np.exp(gdp_val) * 0.02 * size_mult
+            else:
+                row["sponge_inv_m"] = 0.0
+
+            # Blue-green ratio: ratio of green (NDVI) to green+water (precip proxy)
+            gr = row.get("green_rate", 0.35)
+            precip = row.get("annual_precip", 1200.0)
+            water_proxy = np.clip(precip / 3000.0, 0.05, 0.95)
+            row["blue_green_ratio_m"] = gr / (gr + water_proxy + 1e-8)
+
+            # Coupling coordination: between urbanization and ecology
+            ur = row.get("urban_rate", 0.5)
+            u1 = np.clip(gr, 0.01, 0.99)
+            u2 = np.clip(ur, 0.01, 0.99)
+            c = 2.0 * np.sqrt(u1 * u2) / (u1 + u2 + 1e-8)
+            t = 0.5 * u1 + 0.5 * u2
+            row["coupling_coord_m"] = float(np.sqrt(max(c * t, 0)))
 
             # Policy intensity
             row["sponge_intensity"] = row.get("sponge_inv_m", 0.0)
