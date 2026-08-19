@@ -95,7 +95,8 @@ def main():
 
     from traditional_did import compare_dml_vs_did, event_study
     all_results["dml_vs_did"] = compare_dml_vs_did(panel)
-    all_results["event_study"] = event_study(panel)
+    all_results["event_study"] = event_study(panel, y_col="csee")
+    all_results["event_study_rsei"] = event_study(panel, y_col="rsei")
 
     # ── Phase 5: Mechanism Analysis ───────────────────────────────────────
     print("\n\n" + "=" * 70)

@@ -53,17 +53,44 @@ def plot_event_study(event_study_df, name="fig_event_study"):
     fig, ax = plt.subplots(figsize=(10, 5))
 
     df = event_study_df.copy()
-    ax.errorbar(df["event_time"], df["coefficient"], yerr=1.96 * df["se"],
-                fmt="o-", capsize=3, capthick=1, linewidth=1.5, markersize=5,
-                color="#2c7fb8", ecolor="#7fcdbb")
+
+    # Split pre and post treatment
+    pre = df[df["event_time"] < -1]
+    post = df[df["event_time"] >= 0]
+    ref = pd.DataFrame([{"event_time": -1, "coefficient": 0.0, "se": 0.0}])
+
+    # Pre-treatment: blue circles
+    ax.errorbar(pre["event_time"], pre["coefficient"], yerr=1.96 * pre["se"],
+                fmt="o--", capsize=3, capthick=1, linewidth=1.2, markersize=6,
+                color="#2c7fb8", ecolor="#7fcdbb", label="Pre-treatment leads")
+
+    # Reference period (k=-1)
+    ax.plot(ref["event_time"], ref["coefficient"], "s", color="gray",
+            markersize=8, label="Reference (k=-1)", zorder=5)
+
+    # Post-treatment: red squares
+    ax.errorbar(post["event_time"], post["coefficient"], yerr=1.96 * post["se"],
+                fmt="s-", capsize=3, capthick=1, linewidth=1.5, markersize=6,
+                color="#d73027", ecolor="#fc8d59", label="Post-treatment lags")
 
     ax.axhline(y=0, color="gray", linestyle="--", linewidth=0.8)
-    ax.axvline(x=-1, color="red", linestyle=":", linewidth=1, label="Policy year (ref)")
+    ax.axvline(x=-1, color="red", linestyle=":", linewidth=1.2)
 
-    ax.set_xlabel("Event Time (years relative to policy)")
-    ax.set_ylabel("Coefficient (CSEE)")
-    ax.set_title("Event Study: Parallel Trends Test")
-    ax.legend()
+    # Add F-test annotation
+    y_col = getattr(df, "attrs", {}).get("y_col", "CSEE")
+    f_stat = getattr(df, "attrs", {}).get("f_stat", None)
+    f_pval = getattr(df, "attrs", {}).get("f_pvalue", None)
+    if f_stat is not None and not np.isnan(f_stat):
+        verdict = "PASS" if f_pval > 0.10 else ("MARGINAL" if f_pval > 0.05 else "FAIL")
+        txt = f"Parallel Trends Test\nF = {f_stat:.3f}, p = {f_pval:.3f}\n→ {verdict}"
+        ax.text(0.02, 0.98, txt, transform=ax.transAxes, va="top", ha="left",
+                fontsize=9, fontfamily="monospace",
+                bbox=dict(boxstyle="round,pad=0.4", facecolor="lightyellow", alpha=0.9))
+
+    ax.set_xlabel("Event Time (years relative to policy adoption)")
+    ax.set_ylabel(f"Coefficient ({y_col.upper()})")
+    ax.set_title(f"Event Study: Parallel Trends Test ({y_col.upper()})")
+    ax.legend(loc="upper right", fontsize=9)
 
     return _save_fig(fig, name)
 
@@ -331,9 +358,15 @@ def generate_all_figures_and_tables(panel, all_results):
     if "dml" in all_results:
         outputs["main_results"] = table_main_results(all_results["dml"])
 
-    # Event study
+    # Event study (CSEE)
     if "event_study" in all_results:
         outputs["event_study"] = plot_event_study(all_results["event_study"])
+
+    # Event study (RSEI)
+    if "event_study_rsei" in all_results:
+        outputs["event_study_rsei"] = plot_event_study(
+            all_results["event_study_rsei"], name="fig_event_study_rsei"
+        )
 
     # DML vs DID
     if "dml_vs_did" in all_results:

@@ -76,42 +76,63 @@ def twfe_did(panel, y_col, d_col="did_shock", x_cols=None,
     }
 
 
-def event_study(panel, y_col="csee", x_cols=None, policy_year=POLICY_YEAR):
-    """Event study for parallel trends test.
+def event_study(panel, y_col="csee", x_cols=None, policy_year=POLICY_YEAR,
+                pre_window=6, post_window=6):
+    """Event study for parallel trends test with staggered treatment.
 
     Estimates leads and lags of treatment to test pre-trends.
 
-    Y_it = Σ_k β_k · 1(year - policy_year = k) + γ·X + α_i + μ_t + ε_it
+    Y_it = Σ_k β_k · 1(year - policy_year_i = k) + γ·X + α_i + μ_t + ε_it
+
+    For staggered treatment, each treated city uses its own policy_year.
+    Non-treated cities serve as the control group throughout.
+
+    Args:
+        panel:       DataFrame with city-year observations
+        y_col:       outcome variable name
+        x_cols:      control variable names
+        policy_year: fallback single policy year (used only if
+                     panel lacks per-city policy_year)
+        pre_window:  number of pre-treatment periods to estimate
+        post_window: number of post-treatment periods to estimate
 
     Returns:
-        DataFrame with event-time coefficients
+        DataFrame with event-time coefficients + parallel trends test stats
     """
     if x_cols is None:
         x_cols = CONTROL_VARS
 
     df = panel.copy()
 
-    # Create event-time dummies (omit k=-1 as reference)
-    df["event_time"] = df["year"] - policy_year
-    df.loc[~df["treat"].astype(bool), "event_time"] = -999  # non-treated always -999
+    # ── Staggered event time ──────────────────────────────────────────
+    # Each city uses its own policy_year if available
+    if "policy_year" in df.columns:
+        df["event_time"] = df.apply(
+            lambda r: int(r["year"]) - int(r["policy_year"])
+            if int(r["treat"]) == 1 else -999,
+            axis=1
+        )
+    else:
+        df["event_time"] = df.apply(
+            lambda r: int(r["year"]) - policy_year
+            if int(r["treat"]) == 1 else -999,
+            axis=1
+        )
 
-    # Only keep treat cities' event times and non-treated
-    # Event time windows: -6 to +6 (omit -1 as reference)
-    event_window = range(-6, 7)
+    # ── Event-time dummies (omit k=-1 as reference) ───────────────────
+    event_window = range(-pre_window, post_window + 1)
+    et_cols = []
     for k in event_window:
         if k == -1:
             continue  # reference period
         col_name = f"et_{k:+d}".replace("+", "p").replace("-", "m")
         df[col_name] = ((df["event_time"] == k) & (df["treat"] == 1)).astype(int)
-
-    # Non-treated interaction: treated × post
-    et_cols = [f"et_{k:+d}".replace("+", "p").replace("-", "m")
-               for k in event_window if k != -1]
+        et_cols.append(col_name)
 
     needed = [y_col, "city_id", "year", "treat"] + et_cols + x_cols
     df_clean = df[needed].dropna().reset_index(drop=True)
 
-    # Demean by city and year FE
+    # Two-way FE via demeaning
     for col in [y_col] + et_cols + x_cols:
         cm = df_clean.groupby("city_id")[col].transform("mean")
         ym = df_clean.groupby("year")[col].transform("mean")
@@ -128,19 +149,75 @@ def event_study(panel, y_col="csee", x_cols=None, policy_year=POLICY_YEAR):
     except Exception:
         result = model.fit(cov_type="HC1")
 
-    # Build results table
+    # ── Build results table ───────────────────────────────────────────
     results_list = []
+    pre_indices = []
     for idx, k in enumerate([k for k in event_window if k != -1]):
+        coef = float(result.params[idx])
+        se_val = float(result.bse[idx])
+        p_val = float(result.pvalues[idx])
+        sig = "***" if p_val < 0.01 else ("**" if p_val < 0.05 else ("*" if p_val < 0.10 else ""))
         results_list.append({
             "event_time": k,
-            "coefficient": float(result.params[idx]),
-            "se": float(result.bse[idx]),
-            "ci_lower": float(result.params[idx] - 1.96 * result.bse[idx]),
-            "ci_upper": float(result.params[idx] + 1.96 * result.bse[idx]),
-            "p_value": float(result.pvalues[idx]),
+            "coefficient": coef,
+            "se": se_val,
+            "ci_lower": coef - 1.96 * se_val,
+            "ci_upper": coef + 1.96 * se_val,
+            "p_value": p_val,
+            "significance": sig,
         })
+        if k < -1:
+            pre_indices.append(idx)
 
-    return pd.DataFrame(results_list)
+    es_df = pd.DataFrame(results_list)
+
+    # ── Parallel trends test: joint F-test on pre-treatment leads ─────
+    if len(pre_indices) > 0:
+        # Wald test: all pre-treatment coefficients = 0
+        R_matrix = np.zeros((len(pre_indices), len(result.params)))
+        for i, pi in enumerate(pre_indices):
+            R_matrix[i, pi] = 1.0
+        try:
+            f_test = result.wald_test(R_matrix, use_f=True)
+            f_stat = float(f_test.fvalue)
+            f_pval = float(f_test.pvalue)
+            f_df = (len(pre_indices), int(result.df_resid))
+        except Exception:
+            f_stat = np.nan
+            f_pval = np.nan
+            f_df = (len(pre_indices), np.nan)
+
+        print(f"\n  Parallel Trends Test ({y_col}):")
+        print(f"  H0: all pre-treatment leads (k={-pre_window}..-2) = 0")
+        print(f"  F({f_df[0]}, {f_df[1]}) = {f_stat:.4f}")
+        print(f"  p-value = {f_pval:.4f}")
+        if f_pval > 0.10:
+            print(f"  → PASS: Cannot reject parallel trends (p > 0.10)")
+        elif f_pval > 0.05:
+            print(f"  → MARGINAL: Weak evidence against parallel trends (0.05 < p ≤ 0.10)")
+        else:
+            print(f"  → FAIL: Parallel trends rejected (p ≤ 0.05)")
+    else:
+        f_stat = np.nan
+        f_pval = np.nan
+
+    # ── Print event study table ───────────────────────────────────────
+    print(f"\n  Event Study Results ({y_col}):")
+    print(f"  {'Event Time':>12s} {'Coefficient':>14s} {'SE':>10s} {'p-value':>10s} {'Sig':>5s}")
+    print(f"  {'-'*55}")
+    for _, r in es_df.iterrows():
+        print(f"  {int(r['event_time']):>+12d} {r['coefficient']:>+14.6f} "
+              f"{r['se']:>10.6f} {r['p_value']:>10.4f} {r['significance']:>5s}")
+    print(f"  {'(ref=-1)':>12s}")
+
+    # Attach test stats as attributes
+    es_df.attrs["f_stat"] = f_stat
+    es_df.attrs["f_pvalue"] = f_pval
+    es_df.attrs["y_col"] = y_col
+    es_df.attrs["n_pre_leads"] = len(pre_indices)
+    es_df.attrs["n_obs"] = len(df_clean)
+
+    return es_df
 
 
 def compare_dml_vs_did(panel, y_cols=None, x_cols=None):
