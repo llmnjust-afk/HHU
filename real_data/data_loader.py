@@ -34,6 +34,7 @@ from real_data.gee_ndvi import load_ndvi_panel, EE_AVAILABLE
 from real_data.era5_weather import load_weather_panel, CDS_AVAILABLE
 from real_data.city_stats import load_yearbook_data, merge_with_city_info, CONTROL_COLS
 from real_data.real_controls import build_real_controls
+from real_data.mendeley_merge import merge_mendeley_controls
 
 
 def load_real_panel(
@@ -116,16 +117,10 @@ def load_real_panel(
         print(f"  Falling back to synthetic events...")
         events = _generate_synthetic_events_fallback(city_info, start_year, end_year)
 
-    # 5. Yearbook data
+    # 5. Yearbook data (skip broken CSV loader; Mendeley data merged later)
     print("\n[5] Loading city statistical yearbook data...")
-    yearbook = load_yearbook_data(yearbook_dir)
-    if not yearbook.empty:
-        yearbook = merge_with_city_info(yearbook, city_info)
-        print(f"  Yearbook data merged: {len(yearbook)} city-years")
-    else:
-        print(f"  WARNING: No yearbook data found in {yearbook_dir}")
-        print(f"  Place yearbook files as yearbook_{{year}}.xlsx")
-        print(f"  Falling back to synthetic controls...")
+    print("  Using Mendeley dataset (261 cities, 2009-2021) — merged in step 6")
+    yearbook = pd.DataFrame()
 
     # 6. Assemble panel
     print("\n[6] Assembling panel...")
@@ -289,6 +284,10 @@ def _assemble_panel(city_info, ndvi_ts, events, yearbook, start_year, end_year):
     # Policy intensity (continuous)
     panel["policy_intensity"] = np.log(panel["sponge_intensity"].clip(lower=1))
     panel.loc[panel["sponge_intensity"] == 0, "policy_intensity"] = 0
+
+    # Merge REAL yearbook data from Mendeley dataset (261 cities, 2009-2021)
+    print("\n  [Panel] Merging real yearbook controls from Mendeley dataset...")
+    panel = merge_mendeley_controls(panel, city_info, start_year, end_year)
 
     # Fill missing control variables with column medians (real data, not random)
     for col in CONTROL_VARS:
