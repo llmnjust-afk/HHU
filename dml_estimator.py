@@ -52,13 +52,24 @@ def _demean_panel(df, y_col, d_col, x_cols):
 
     # City fixed effects (demean by city)
     for col in cols_to_transform:
+        series = df[col]
+        if isinstance(series, pd.DataFrame):
+            series = series.iloc[:, 0]
         city_means = df.groupby("city_id")[col].transform("mean")
-        df[col + "_dm"] = df[col] - city_means
+        if isinstance(city_means, pd.DataFrame):
+            city_means = city_means.iloc[:, 0]
+        df[col + "_dm"] = series - city_means
 
     # Year fixed effects (demean by year on already city-demeaned)
     for col in cols_to_transform:
-        year_means = df.groupby("year")[col + "_dm"].transform("mean")
-        df[col + "_dm"] = df[col + "_dm"] - year_means
+        dm_col = col + "_dm"
+        series = df[dm_col]
+        if isinstance(series, pd.DataFrame):
+            series = series.iloc[:, 0]
+        year_means = df.groupby("year")[dm_col].transform("mean")
+        if isinstance(year_means, pd.DataFrame):
+            year_means = year_means.iloc[:, 0]
+        df[dm_col] = series - year_means
 
     return df
 
