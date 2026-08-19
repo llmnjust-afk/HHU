@@ -42,7 +42,7 @@ def load_real_panel(
     ndvi_path="data/ndvi_panel.pkl",
     weather_path="data/weather_events.pkl",
     yearbook_dir="data/yearbook",
-    policy="both",
+    policy="climate_adaptive",
     start_year=START_YEAR,
     end_year=END_YEAR,
     use_full_city_list=True,
