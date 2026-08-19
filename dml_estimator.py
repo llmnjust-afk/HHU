@@ -144,10 +144,14 @@ def dml_plr(panel, y_col, d_col, x_cols=None, learner="random_forest",
     else:
         theta = np.dot(D_resid, Y_resid) / DTD
 
-    # Standard error
+    # Standard error (heteroskedasticity-robust DML variance)
+    # Following Chernozhukov et al. (2018): se = sqrt( sum(D_resid² * resid²) ) / sum(D_resid²)
     residuals = Y_resid - theta * D_resid
-    sigma2 = np.dot(residuals, residuals) / (n - 1)
-    se = np.sqrt(sigma2 / DTD) if DTD > 1e-10 else np.nan
+    psi = D_resid * residuals  # influence function
+    if DTD > 1e-10:
+        se = np.sqrt(np.sum(psi ** 2)) / DTD
+    else:
+        se = np.nan
 
     # Bootstrap inference
     if bootstrap:
