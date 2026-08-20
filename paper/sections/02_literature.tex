@@ -1,0 +1,101 @@
+\section{Literature Review}
+\label{sec:literature}
+
+\subsection{Ecological Resilience Measurement}
+
+Ecological resilience, defined as the capacity of an ecosystem to
+absorb disturbance and reorganise while retaining essentially the same
+functions and feedbacks, has become a central concept in environmental
+management \citep{ipcc2023cities}. Quantifying resilience, however,
+remains methodologically contested. The Remote Sensing Ecological Index
+(RSEI) integrates greenness, wetness, heat, and dryness components
+derived from satellite imagery into a single composite score, and has
+been widely applied to assess urban ecological quality across Chinese
+cities \citep{chen2023evaluation,liu2024analysis,huang2024assessment}.
+Recent advances have extended RSEI with deep-learning feature
+extraction \citep{gong2025beyond} and water-body corrections
+\citep{zhou2025dynamic}, while \citet{zhang2025urban} propose an
+improved RSEI that addresses the computational challenges of its land
+surface temperature component. \citet{zhang2025constructing} demonstrate
+that RSEI can be integrated with circuit theory to construct ecological
+security patterns, bridging the gap between quality assessment and
+spatial planning.
+
+A limitation of RSEI and similar composite indices is that they measure
+ecological \emph{state} rather than ecological \emph{resilience}---the
+dynamic response to disturbance. \citet{smith2023global} address this by
+quantifying vegetation resilience through the temporal autocorrelation
+of NDVI, finding that resilience is linked to water availability and
+variability globally. \citet{li2023widespread} show that spring
+phenology significantly affects drought recovery times across the
+Northern Hemisphere, underscoring the importance of measuring recovery
+as a distinct dimension of resilience. These studies motivate our
+approach of decomposing ecological resilience into resistance (the
+degree to which NDVI is maintained during an extreme event) and
+recovery (the speed of NDVI restoration afterwards), rather than
+relying on a static composite index alone.
+
+\subsection{Climate Adaptation Policy Evaluation in China}
+
+China has implemented a series of pilot programmes to promote urban
+climate adaptation. The sponge city programme, launched in 2015--2016,
+focused on stormwater management through permeable pavements, green
+roofs, and bioswales \citep{han2023chinas}. \citet{wang2024sponge}
+evaluate the sponge city pilot's effect on ecological livability,
+finding modest improvements in green coverage. The broader
+climate-adaptive city pilot programme, launched in 2017, extends
+beyond stormwater to encompass heat-island mitigation, ecological
+corridor construction, and comprehensive climate risk assessment
+\citep{ipcc2023cities}. \citet{wang2024urban} provide an overview of
+nature-based solutions in Chinese urban planning, including the
+National Forest City programme, while \citet{lu2026does} examine the
+effect of culture-tourism integration policy on urban ecological
+resilience using multi-period DID.
+
+A growing literature applies quasi-experimental methods to evaluate
+these policies. \citet{gao2025renewable} use advanced data analysis
+techniques to assess renewable energy policies' impact on greenhouse
+gas emissions. \citet{yuan2024double} employ a DML model to measure the
+effect of the ``Made in China 2025'' strategy on green economic growth,
+demonstrating the applicability of machine-learning causal inference
+to Chinese policy evaluation. \citet{qian2025impact} apply DML to
+evaluate the zero-waste city pilot's effect on corporate green
+transformation, while \citet{yu2025carbon} combine staggered DID with
+DML to estimate the carbon mitigation effect of service trade
+innovation. \citet{zhang2025does} use DML to study the synergistic
+effect of digital infrastructure on pollution and carbon reduction.
+These studies collectively demonstrate the potential of DML for policy
+evaluation, but none has applied it specifically to the climate-adaptive
+city pilot's ecological outcomes.
+
+\subsection{Double Machine Learning for Causal Inference}
+
+Double/debiased machine learning (DML) \citep{chernozhukov2022automatic}
+provides a framework for estimating low-dimensional causal parameters in
+the presence of high-dimensional or nonparametric nuisance functions.
+The key innovation is the combination of Neyman orthogonality---which
+insulates the target parameter from first-order bias in nuisance
+estimation---with cross-fitting, which prevents overfitting by
+separating the samples used for nuisance estimation and target
+parameter estimation \citep{ahrens2024ddml,bia2023double}. This approach
+has several advantages over conventional parametric DID. First, it
+allows flexible machine-learning algorithms to model the relationship
+between confounders and both the treatment and outcome, without
+imposing linearity or additivity. Second, the orthogonality condition
+ensures $\sqrt{n}$-consistency and asymptotic normality even when the
+nuisance functions converge at slower rates. Third, it naturally
+accommodates multiple ML learners, enabling algorithm comparison as a
+form of specification robustness \citep{byrnes2025causal}.
+
+The DID--DML hybrid we employ extends the standard DML partially linear
+model by interacting the treatment indicator with a continuous measure
+of climate shock intensity. This specification captures the policy's
+differential effect under varying levels of climate stress, which is
+the theoretical mechanism through which climate-adaptive infrastructure
+is expected to operate: the policy's ecological benefits should be most
+pronounced when cities face more severe extreme weather events.
+\citet{callaway2024did} formalise DID with continuous treatments, while
+\citet{borusyak2024revisiting} develop robust event-study estimators
+for staggered designs. Our approach, by focusing on a single treatment
+cohort (2017), avoids the negative-weight problems that plague staggered
+TWFE estimators \citep{chaisemartin2023twoway,roth2024interpreting}.

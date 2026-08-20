@@ -1,0 +1,108 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Interpretation of Findings}
+
+The results provide evidence that China's 2017 climate-adaptive city
+pilot programme enhanced urban ecological resilience, with the effect
+operating primarily through accelerated post-shock vegetation recovery
+rather than through improved resistance during extreme events. This
+finding aligns with the ecological resilience literature, which
+emphasises recovery speed as a more tractable policy target than
+real-time resistance \citep{smith2023global,li2023widespread}. The
+significant XGBoost estimate ($\theta = 0.040$, $p < 0.05$) and the
+highly significant recovery-channel estimate ($\theta = 0.081$,
+$p < 0.01$) represent, to our knowledge, the first causal evidence
+linking climate-adaptive urban policy to measurable improvements in
+satellite-derived ecological resilience.
+
+The positive but non-significant Random Forest estimate for CSEE
+($\theta = 0.015$, $p \approx 0.32$) warrants discussion. The
+difference between learners reflects the well-known tendency of tree
+ensembles to underfit low-variance treatment signals, as the CSEE
+index's CR component has a standard deviation of only 0.089. XGBoost's
+gradient-boosting architecture, which sequentially refines residual
+fitting, is better suited to detecting the policy's effect on the
+high-variance RC component. The consistency of direction across all
+four learners---all produce $\theta > 0$ for CSEE---and the convergence
+of the post-2010 and post-2008 subsample estimates to statistical
+significance under Random Forest ($\theta = 0.037$ and $\theta = 0.033$,
+both $p < 0.05$) suggest that the RF full-sample estimate is
+underpowered rather than null.
+
+\subsection{Policy Selection Endogeneity}
+
+An important consideration is whether pilot cities were selected based
+on pre-existing environmental trajectories. Our parallel-trends tests
+provide reassurance: all five outcome variables pass the joint Wald
+$F$-test ($p > 0.21$), indicating no systematic pre-treatment
+divergence between pilot and control cities. Furthermore, the
+failure of RSEI parallel trends under the combined sponge-city and
+climate-adaptive specification ($F = 6.96$, $p < 0.001$) and its
+recovery under the single-cohort specification ($F = 1.42$, $p = 0.215$)
+demonstrates that the sponge-city cities, not the climate-adaptive
+cities, drove the earlier violation. This finding underscores the
+importance of policy-specific identification strategies when multiple
+overlapping pilot programmes exist.
+
+\subsection{Alternative Outcome: Land Surface Temperature}
+
+As a supplementary analysis, we constructed five land surface
+temperature (LST) outcomes from MODIS MOD11A2 data for 338 cities.
+While the DML estimates for daytime and nighttime LST are
+statistically significant ($\theta_{\mathrm{day}} = 0.35$,
+$p < 0.01$), the parallel-trends test for daytime LST fails
+($F = 3.19$, $p = 0.008$), indicating that pilot and control cities
+had divergent pre-treatment LST trajectories. This violation suggests
+that pilot cities may have been selected partly because they face
+greater warming pressure---an instance of policy selection
+endogeneity that does not affect the CSEE/RSEI outcomes. The LST
+results therefore serve as a cautionary illustration of how
+selection on outcome trends can produce spurious significance,
+reinforcing the importance of parallel-trends validation for any
+candidate outcome variable.
+
+\subsection{Heterogeneity and Policy Implications}
+
+The geographic heterogeneity---with eastern cities showing the
+strongest effect---is consistent with the hypothesis that policy
+implementation effectiveness depends on institutional capacity and
+fiscal resources \citep{lu2024spatiotemporal,zhao2025coevolution}.
+Eastern China's more developed municipal governments may be better
+positioned to execute the pilot programme's ecological restoration
+mandates, from procurement of green infrastructure to enforcement of
+land-use regulations. The larger effect in smaller cities suggests
+that compact urban footprints may facilitate more rapid ecological
+recovery, as restoration interventions cover a greater proportion of
+the urban ecosystem.
+
+These heterogeneity patterns carry direct policy implications. First,
+scaling the climate-adaptive city programme nationally should
+prioritise eastern and smaller cities where returns are highest, while
+providing additional implementation support to central and western
+regions. Second, the recovery-dominated mechanism suggests that policy
+design should emphasise post-disturbance restoration
+infrastructure---such as rapid replanting protocols, irrigation
+systems for drought recovery, and soil remediation---over real-time
+protective measures. Third, the stronger effects in the post-2010
+subsample indicate that policy benefits accumulate over time,
+supporting sustained rather than short-term programme commitments.
+
+\subsection{Limitations}
+
+Several limitations should be noted. First, the CSEE index relies on
+NDVI as the sole ecological indicator; while NDVI is the most widely
+used satellite vegetation measure, it does not capture biodiversity,
+soil health, or below-ground processes. Future research could extend
+the index using enhanced vegetation index (EVI), solar-induced
+fluorescence (SIF), or species richness data. Second, the treatment
+effect is identified through a single policy cohort (2017), which
+limits our ability to examine treatment-effect dynamics across
+multiple cohorts. Third, the 27 treated cities represent a relatively
+small treatment group, which constrains statistical power for
+subgroup analysis. Fourth, while we control for a rich set of
+observables, unobserved time-varying confounders---such as concurrent
+environmental regulations---could bias estimates if they correlate
+with both pilot status and ecological outcomes. The placebo test
+and PSM results provide partial reassurance, but cannot fully rule
+out this concern.

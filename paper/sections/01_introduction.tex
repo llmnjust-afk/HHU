@@ -1,0 +1,85 @@
+\section{Introduction}
+\label{sec:introduction}
+
+Climate change has intensified the frequency and severity of extreme
+weather events worldwide, with multiyear droughts becoming increasingly
+common and vegetation resilience declining across multiple biomes
+\citep{chen2025global,smith2023global}. Urban ecosystems are
+particularly vulnerable because concentrated impervious surfaces,
+fragmented green spaces, and anthropogenic heat amplification magnify
+the impacts of heatwaves, droughts, and extreme precipitation
+\citep{ipcc2023cities}. In response, national and subnational
+governments have launched adaptation programmes designed to bolster
+the capacity of urban ecosystems to withstand and recover from climate
+disturbances. Evaluating whether such policies achieve their intended
+ecological outcomes, however, has proven methodologically challenging:
+randomised assignment is infeasible, treatment is endogenous to prior
+environmental conditions, and conventional difference-in-differences
+(DID) estimators impose functional-form assumptions that may mask
+heterogeneous or nonlinear confounding relationships
+\citep{rambachan2023more,chaisemartin2023twoway}.
+
+China's climate-adaptive city pilot programme, launched in 2017 under
+document No.~343 of the National Development and Reform Commission,
+designated 28 prefecture-level cities as pilot sites for comprehensive
+climate adaptation planning. The policy mandates integration of
+climate-resilient infrastructure, ecological corridor construction,
+and early-warning systems for extreme weather into municipal development
+plans. Unlike the earlier sponge city programme (2015--2016), which
+focused narrowly on stormwater management \citep{han2023chinas}, the
+climate-adaptive city pilot encompasses a broader portfolio of
+interventions targeting ecological resilience under multiple types of
+climate stress. This broader scope, combined with the programme's
+simultaneous city-level implementation, provides a quasi-experimental
+setting well suited to causal evaluation.
+
+Despite the policy's ambition, three gaps in the existing literature
+limit our understanding of its effectiveness. First, most evaluations
+of Chinese urban environmental pilots focus on economic outcomes such
+as green total factor productivity or ESG performance
+\citep{yuan2024double,qian2025impact}, while direct measurement of
+ecological resilience---the policy's stated objective---remains
+understudied. Second, studies that do examine ecological outcomes
+typically rely on composite indices constructed from cross-sectional
+data or simple trend analysis, without accounting for the role of
+extreme weather events as the very stressors the policy is designed to
+buffer against \citep{gong2025beyond,hasan2025analyzing}. Third, the
+dominant empirical approach---two-way fixed effects (TWFE) DID---has
+been shown to produce biased estimates under heterogeneous treatment
+effects and staggered adoption \citep{borusyak2024revisiting,
+wooldridge2025twoway}, motivating the adoption of more flexible
+estimators that relax parametric assumptions about the
+confounding structure.
+
+This study addresses these gaps by making four contributions. First,
+we construct a Climate-Stress Ecological Elasticity (CSEE) index that
+directly measures ecosystem resistance to and recovery from extreme
+weather events using satellite-derived NDVI, thereby aligning the
+outcome variable with the policy's resilience objective. Second, we
+employ a Double Machine Learning (DML) framework
+\citep{chernozhukov2022automatic} that combines DID identification
+with cross-fitted machine-learning estimation of nuisance functions,
+relaxing the functional-form constraints of parametric DID while
+preserving the causal interpretation of the treatment effect
+\citep{ahrens2024ddml}. Third, we integrate multiple satellite data
+sources---MODIS NDVI, ERA5 reanalysis, and MODIS land surface
+temperature---with municipal yearbook data to build a rich panel of
+338 cities over 2005--2023, achieving 77\% coverage with real
+socioeconomic controls. Fourth, we conduct a comprehensive battery of
+robustness tests, including 200-iteration placebo tests, propensity-score
+matching, subsample restrictions, and an alternative-outcome analysis
+using land surface temperature, alongside a seven-dimension
+heterogeneity analysis and a resistance--recovery mechanism
+decomposition.
+
+The remainder of this paper is organised as follows.
+Section~\ref{sec:literature} reviews the relevant literature on
+ecological resilience measurement, climate adaptation policy
+evaluation, and machine-learning causal inference.
+Section~\ref{sec:methodology} introduces the DML--DID framework and
+the CSEE construction. Section~\ref{sec:data} describes the data
+sources and variable construction. Section~\ref{sec:results} presents
+the main estimation results, parallel-trends tests, heterogeneity
+analysis, and robustness checks. Section~\ref{sec:discussion} discusses
+the findings, policy implications, and limitations.
+Section~\ref{sec:conclusion} concludes.

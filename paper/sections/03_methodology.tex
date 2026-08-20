@@ -1,0 +1,145 @@
+\section{Methodology}
+\label{sec:methodology}
+
+\subsection{The DML--DID Framework}
+
+We employ a partially linear regression (PLR) model in the DML
+framework of \citet{chernozhukov2022automatic}. The model
+specifies the outcome $Y$ as a function of the treatment $D$ and a
+set of confounders $X$:
+\begin{equation}
+\label{eq:plr}
+Y = \theta \cdot D + g(X) + \varepsilon, \qquad
+D = m(X) + \nu,
+\end{equation}
+where $g(\cdot)$ and $m(\cdot)$ are unknown nuisance functions,
+$\theta$ is the causal parameter of interest, and
+$\mathbb{E}[\varepsilon \mid X, D] = 0$,
+$\mathbb{E}[\nu \mid X] = 0$.
+
+The treatment variable $D$ is constructed as the interaction between
+a policy dummy ($\did_i$) and a continuous climate shock intensity
+measure ($S_{it}$):
+\begin{equation}
+\label{eq:treatment}
+D_{it} = \did_{it} \times S_{it},
+\end{equation}
+where $\did_{it} = \mathbf{1}[t \geq 2017] \times \mathbf{1}[i \in
+\mathcal{T}]$ and $\mathcal{T}$ denotes the set of 27 pilot cities.
+The shock intensity $S_{it}$ is standardised to $[0, 1]$ and captures
+the severity of extreme weather events experienced by city $i$ in
+year $t$, enabling identification of the policy's differential effect
+under climate stress.
+
+\subsection{Cross-Fitting and Nuisance Estimation}
+
+To estimate $\theta$ without parametric restrictions on $g$ and $m$,
+we implement $K$-fold cross-fitting. The sample is partitioned into
+$K$ mutually exclusive folds. For each fold $k$, nuisance functions
+are estimated on the remaining $K-1$ folds and used to predict
+residualised outcomes and treatments on the held-out fold:
+\begin{align}
+\tilde{Y}_i &= Y_i - \hat{g}_k(X_i), \\
+\tilde{D}_i &= D_i - \hat{m}_k(X_i).
+\end{align}
+The final estimator is the residual-on-residual OLS regression:
+\begin{equation}
+\label{eq:dml_estimator}
+\hat{\theta} = \frac{\sum_i \tilde{D}_i \tilde{Y}_i}
+                    {\sum_i \tilde{D}_i^2}.
+\end{equation}
+
+Before cross-fitting, all variables are within-transformed by
+demean-ing over city and year fixed effects to absorb time-invariant
+unobservables and common temporal shocks, following the TWFE--DML
+approach of \citet{ahrens2024ddml}. The nuisance functions are
+estimated using four machine-learning learners---Random Forest (RF),
+XGBoost, Neural Network (NN), and LASSO---enabling comparison across
+algorithms as a specification robustness check.
+
+\subsection{Inference}
+
+Standard errors are computed using the heteroskedasticity-robust
+DML variance formula \citep{chernozhukov2022automatic}:
+\begin{equation}
+\label{eq:se}
+\widehat{\mathrm{SE}}(\hat{\theta}) =
+\frac{\sqrt{\sum_i (\tilde{D}_i \hat{\varepsilon}_i)^2}}
+     {\sum_i \tilde{D}_i^2},
+\end{equation}
+where $\hat{\varepsilon}_i = \tilde{Y}_i - \hat{\theta}\tilde{D}_i$.
+For the main results table, we additionally report bootstrap standard
+errors based on 200 resampling iterations of the residualised data.
+
+\subsection{CSEE Construction}
+\label{sec:csee}
+
+The Climate-Stress Ecological Elasticity (CSEE) index decomposes
+ecological resilience into two components:
+\begin{equation}
+\CSEE_{it} = 0.5 \times \mathrm{CR}_{it} + 0.5 \times \mathrm{RC}_{it},
+\end{equation}
+where CR (Climate Resistance) measures the degree to which NDVI is
+maintained during extreme weather events, and RC (Recovery) measures
+the speed of NDVI restoration afterwards.
+
+\paragraph{Climate Resistance (CR).}
+For each extreme weather event $e$ affecting city $i$, we compute:
+\begin{equation}
+\mathrm{CR}_{ie} = 1 - \frac{|\mathrm{NDVI}_{ie}^{\mathrm{event}} -
+       \mathrm{NDVI}_{i}^{\mathrm{normal}}|}
+      {\mathrm{NDVI}_{i}^{\mathrm{normal}}},
+\end{equation}
+where $\mathrm{NDVI}_{i}^{\mathrm{normal}}$ is the 5-year pre-event
+mean, and $\mathrm{NDVI}_{ie}^{\mathrm{event}}$ is the NDVI during the
+event window (30 days centred on the event). CR is then averaged across
+all events in city-year $it$.
+
+\paragraph{Climate Recovery (RC).}
+Recovery is measured as the fraction of NDVI loss regained within a
+3-month post-event window:
+\begin{equation}
+\mathrm{RC}_{ie} = \frac{\mathrm{NDVI}_{ie}^{\mathrm{post}} -
+       \mathrm{NDVI}_{ie}^{\mathrm{event}}}
+      {\mathrm{NDVI}_{i}^{\mathrm{normal}} -
+       \mathrm{NDVI}_{ie}^{\mathrm{event}}},
+\end{equation}
+where $\mathrm{NDVI}_{ie}^{\mathrm{post}}$ is the mean NDVI in the
+3 months following the event. Cross-year recovery is attributed to the
+year in which the event began, accommodating events that span calendar
+year boundaries.
+
+\subsection{Parallel Trends and Event Study}
+
+Identification in the DID--DML framework rests on the parallel-trends
+assumption: in the absence of treatment, outcome trends in pilot and
+control cities would have evolved similarly. We test this assumption
+using an event-study specification with formal Wald $F$-tests on
+pre-treatment leads:
+\begin{equation}
+\label{eq:event_study}
+Y_{it} = \alpha_i + \delta_t + \sum_{k=-6, k\neq -1}^{6}
+         \beta_k \cdot \mathbf{1}[t - 2017 = k] \cdot
+         \mathbf{1}[i \in \mathcal{T}] + \gamma X_{it} + \varepsilon_{it},
+\end{equation}
+where $k = -1$ is the reference period. The null hypothesis
+$H_0: \beta_{-6} = \cdots = \beta_{-2} = 0$ is tested via a joint
+Wald $F$-statistic, and failure to reject at the 10\% level is
+interpreted as support for parallel trends
+\citep{rambachan2023more}.
+
+\subsection{Robustness Design}
+
+We implement six robustness checks. (i)~Alternative ML algorithms
+(RF, XGBoost, NN, LASSO) to assess sensitivity to learner choice.
+(ii)~A 200-iteration placebo test, randomly permuting treatment
+assignment within each year and estimating $\hat{\theta}$ on each
+permutation; the placebo $p$-value is the fraction of permutations
+yielding $|\hat{\theta}_{\mathrm{placebo}}| \geq
+|\hat{\theta}_{\mathrm{true}}|$. (iii)~Propensity-score matching
+(PSM)--DML, matching treated cities to controls on pre-treatment
+covariates before DML estimation. (iv)~Subsample restrictions,
+excluding COVID-affected years (2020--2022) and restricting to
+post-2010 and post-2008 samples. (v)~Cross-fitting sensitivity with
+$K \in \{3, 5, 7, 10\}$. (vi)~Lagged treatment effects up to 3 years
+to capture delayed policy impacts.

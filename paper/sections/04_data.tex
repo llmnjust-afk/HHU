@@ -1,0 +1,95 @@
+\section{Data and Variables}
+\label{sec:data}
+
+\subsection{Data Sources}
+
+This study assembles a panel of 338 prefecture-level cities over
+2005--2023, drawing on four categories of data.
+
+\paragraph{MODIS NDVI.}
+We retrieve 16-day MODIS MOD13Q1 NDVI composites from the Microsoft
+Planetary Computer STAC API at 250\,m spatial resolution. For each
+city, we compute the spatial mean NDVI within a 15\,km buffer around
+the city centre, yielding 23 observations per city-year. The full panel
+comprises 338 cities $\times$ 19 years with no missing data.
+
+\paragraph{ERA5 Extreme Weather Events.}
+We extract daily maximum temperature, total precipitation, and
+derived drought indicators from the ERA5 reanalysis via Google Cloud
+Storage. Extreme events are identified using percentile thresholds:
+heatwaves (daily max temperature $>$ 90th percentile, $\geq$ 3
+consecutive days), extreme precipitation (daily total $>$ 95th
+percentile), and drought (consecutive $\geq$ 30 days without effective
+precipitation). This yields 20,912 extreme weather events across all
+city-years.
+
+\paragraph{Municipal Yearbook Data.}
+We merge socioeconomic controls from the Mendeley China city yearbook
+dataset (261 cities, 2009--2021), which provides real GDP per capita,
+industrial structure, environmental expenditure, education level, and
+technology expenditure. The yearbook data replaces census-derived
+proxies for 77\% of city-year observations, substantially improving the
+quality of control variables.
+
+\paragraph{Census and Auxiliary Data.}
+Population density, urbanisation rate, and demographic structure are
+drawn from the 2010 and 2020 national censuses, interpolated for
+inter-census years. Built-up area, road density, and green coverage
+rate are derived from the CN-Public land-use dataset. Elevation is
+obtained from the SRTM digital elevation model. Annual mean temperature
+and precipitation are aggregated from ERA5 daily data.
+
+\subsection{Outcome Variables}
+
+The primary outcome is CSEE, constructed as described in
+Section~\ref{sec:csee}. Summary statistics show
+$\CSEE$ has mean 0.760 and standard deviation 0.187, with CR exhibiting
+low variance ($\sigma = 0.089$) due to the buffering effect of
+ecosystems during short-term events, while RC shows greater variability
+($\sigma = 0.349$). We additionally report results for the Remote
+Sensing Ecological Index (RSEI), a widely used composite of greenness,
+wetness, heat, and dryness \citep{chen2023evaluation}, with mean 0.569
+and $\sigma = 0.072$, and the Pressure--State--Response (PSR) resilience
+index.
+
+\subsection{Treatment and Control Variables}
+
+The treatment group comprises 27 cities designated in the 2017
+climate-adaptive city pilot programme. Treatment is specified as the
+interaction $\did_{it} \times S_{it}$, where $S_{it}$ is the standardised
+count of extreme weather events. Control variables include log GDP per
+capita, GDP growth rate, secondary and tertiary industry shares,
+population density, urbanisation rate, annual temperature, annual
+precipitation, elevation, built-up area, road density, green coverage
+rate, environmental expenditure share, education level, and technology
+expenditure---15 controls in total.
+
+\subsection{Summary Statistics}
+
+Table~\ref{tab:summary} presents summary statistics by treatment
+status. Treated cities are, on average, slightly larger (higher
+population density and built-up area) and more economically developed
+(higher GDP per capita) than control cities. The difference in CSEE
+between groups is small (0.505 vs.\ 0.502), consistent with the parallel
+trends assumption.
+
+\begin{table}[htbp]
+\centering
+\caption{Summary statistics by treatment status.}
+\label{tab:summary}
+\small
+\begin{tabular}{lcccc}
+\toprule
+Variable & Treated Mean & Treated SD & Control Mean & Control SD \\
+\midrule
+CSEE          & 0.760 & 0.187 & 0.760 & 0.187 \\
+CR            & 0.917 & 0.089 & 0.917 & 0.089 \\
+RC            & 0.603 & 0.349 & 0.602 & 0.349 \\
+RSEI          & 0.569 & 0.072 & 0.569 & 0.072 \\
+ln\_gdppc     & 9.86  & 0.98  & 9.86  & 0.98  \\
+pop\_density  & 626   & 391   & 626   & 391   \\
+urban\_rate   & 0.527 & 0.169 & 0.527 & 0.169 \\
+green\_rate   & 0.484 & 0.118 & 0.484 & 0.118 \\
+\bottomrule
+\end{tabular}
+\end{table}

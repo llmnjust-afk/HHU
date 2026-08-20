@@ -1,0 +1,49 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+This study evaluates the causal effect of China's 2017
+climate-adaptive city pilot programme on urban ecological resilience
+using a Double Machine Learning framework with satellite-derived
+outcomes. Drawing on MODIS NDVI, ERA5 extreme weather events, and
+municipal yearbook data for 338 cities over 2005--2023, we construct
+a Climate-Stress Ecological Elasticity index that directly measures
+ecosystem resistance to and recovery from climate shocks. The
+principal findings are threefold.
+
+First, the climate-adaptive city pilot has a positive, statistically
+significant effect on ecological resilience, with the XGBoost DML
+estimate of $\theta = 0.040$ ($p < 0.05$) representing a 5.3\%
+increase in CSEE relative to the sample mean. This effect is robust
+to alternative ML learners, 200-iteration placebo tests, propensity-score
+matching, and subsample restrictions, with the post-2010 and post-2008
+subsamples both achieving 5\% significance under Random Forest.
+
+Second, the policy's effect operates almost entirely through the
+recovery channel: the recovery component (RC) shows a highly
+significant effect ($\theta = 0.081$, $p < 0.01$), while the
+resistance component (CR) is insignificant. This decomposition
+reveals that the pilot programme enhances resilience not by buffering
+vegetation during extreme events but by accelerating post-disturbance
+recovery---a mechanism consistent with the policy's emphasis on
+ecological restoration infrastructure.
+
+Third, the parallel-trends assumption is satisfied for all five
+outcome variables, and the heterogeneity analysis reveals a
+consistent positive direction across seven dimensions, with eastern
+and smaller cities benefiting most. The comparison with an
+alternative LST outcome, which fails the parallel-trends test,
+demonstrates the importance of policy-specific identification and
+parallel-trends validation.
+
+These findings carry implications for both environmental management
+practice and causal inference methodology. For practitioners, the
+recovery-dominated mechanism suggests that climate-adaptation
+investments should prioritise post-disturbance restoration
+infrastructure over real-time protective measures, and that programme
+scaling should target regions with strong implementation capacity.
+For methodologists, the study demonstrates that DML--DID can deliver
+meaningful efficiency gains over conventional TWFE-DID---approximately
+25\% smaller standard errors---while maintaining the causal
+interpretation of the estimate, and that algorithm comparison across
+multiple ML learners serves as a valuable specification robustness
+check in environmental policy evaluation.

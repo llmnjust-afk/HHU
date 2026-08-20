@@ -1,0 +1,90 @@
+\documentclass[review,3p,times,authoryear]{elsarticle}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage[labelfont=bf,font=small]{caption}
+\usepackage[labelfont=bf,font=small]{subcaption}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{xcolor}
+\usepackage{placeins}
+\usepackage{siunitx}
+\sisetup{detect-all,table-format=3.3}
+
+% ── Custom commands ──────────────────────────────────────────────
+\newcommand{\did}{\mathrm{DID}}
+\newcommand{\CSEE}{\mathrm{CSEE}}
+\newcommand{\RSEI}{\mathrm{RSEI}}
+\newcommand{\PSR}{\mathrm{PSR}}
+
+% ── Journal info ──────────────────────────────────────────────────
+\journal{Journal of Environmental Management}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{Evaluating the Causal Effect of Climate-Adaptive City Pilot Policy
+       on Urban Ecological Resilience: \\
+       A Double Machine Learning Approach with Satellite Evidence}
+
+\author[1]{Anonymous Author}
+\ead{author@example.edu}
+
+\address[1]{Department of Environmental Science, Anonymous University, China}
+
+\begin{abstract}
+Climate-adaptive city pilots represent a flagship policy instrument for
+enhancing urban resilience to extreme weather, yet rigorous causal evidence
+on their ecological effectiveness remains scarce. This study evaluates
+whether China's 2017 climate-adaptive city pilot program improved urban
+ecological resilience, employing a Double Machine Learning (DML) framework
+that combines difference-in-differences (DID) identification with flexible
+machine-learning nuisance function estimation. Using satellite-derived
+NDVI from MODIS and extreme weather events from ERA5 reanalysis for 338
+Chinese cities over 2005--2023, we construct a Climate-Stress Ecological
+Elasticity (CSEE) index capturing both ecosystem resistance to and recovery
+from climate shocks. The DML estimates reveal a positive treatment effect
+on CSEE ($\theta = 0.040$, $p < 0.05$, XGBoost learner) and, more
+pronouncedly, on the recovery component ($\theta = 0.081$, $p < 0.01$),
+indicating that pilot cities exhibit faster vegetation recovery after
+extreme weather events. Parallel-trends tests pass for all five outcome
+variables ($p > 0.21$), and results are robust to 200-iteration placebo
+tests, propensity-score matching, sample restrictions, and alternative
+cross-fitting folds. Heterogeneity analysis shows that eastern and smaller
+cities benefit most, while mechanism decomposition identifies ecological
+recovery---rather than resistance---as the dominant transmission channel.
+These findings demonstrate that climate-adaptive urban policies can
+meaningfully enhance ecosystem recovery capacity, offering evidence-based
+guidance for scaling pilot programs nationally.
+\end{abstract}
+
+\begin{keyword}
+Climate-adaptive city pilot \sep
+Ecological resilience \sep
+Double machine learning \sep
+Difference-in-differences \sep
+MODIS NDVI \sep
+Extreme weather
+\end{keyword}
+
+\end{frontmatter}
+
+% ── Body ──────────────────────────────────────────────────────────
+\input{sections/01_introduction}
+\input{sections/02_literature}
+\input{sections/03_methodology}
+\input{sections/04_data}
+\input{sections/05_results}
+\input{sections/06_discussion}
+\input{sections/07_conclusion}
+
+% ── References ───────────────────────────────────────────────────
+\bibliographystyle{elsarticle-harv}
+\bibliography{refs}
+
+\end{document}
